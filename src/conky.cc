@@ -63,6 +63,9 @@
 #ifdef BUILD_XDAMAGE
 #include <X11/extensions/Xdamage.h>
 #endif
+#ifdef MOUSE_EVENTS
+#include "mouse_events.h"
+#endif
 #ifdef BUILD_IMLIB2
 #include "imlib2.h"
 #endif /* BUILD_IMLIB2 */
@@ -2158,6 +2161,9 @@ void main_loop() {
             break;
 
           case ButtonPress:
+#ifdef MOUSE_EVENTS
+            llua_mouse_hook(mouse_press_event(&ev.xbutton));
+#endif /* MOUSE_EVENTS */
             if (own_window.get(*state)) {
               /* if an ordinary window with decorations */
               if ((own_window_type.get(*state) == TYPE_NORMAL &&
@@ -2180,6 +2186,9 @@ void main_loop() {
             break;
 
           case ButtonRelease:
+#ifdef MOUSE_EVENTS
+            llua_mouse_hook(mouse_release_event(&ev.xbutton));
+#endif /* MOUSE_EVENTS */
             if (own_window.get(*state)) {
               /* if an ordinary window with decorations */
               if ((own_window_type.get(*state) == TYPE_NORMAL) &&
@@ -2196,7 +2205,17 @@ void main_loop() {
                          &ev);
             }
             break;
-
+#ifdef MOUSE_EVENTS
+          case MotionNotify:
+            llua_mouse_hook(mouse_move_event(&ev.xmotion));
+            break;
+          case EnterNotify:
+            llua_mouse_hook(mouse_enter_event(&ev.xcrossing));
+            break;
+          case LeaveNotify:
+            llua_mouse_hook(mouse_leave_event(&ev.xcrossing));
+            break;
+#endif /* MOUSE_EVENTS */
 #endif
 
           default:
