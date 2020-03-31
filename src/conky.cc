@@ -2164,7 +2164,11 @@ void main_loop() {
 
           case ButtonPress:
 #ifdef MOUSE_EVENTS
-            consumed = llua_mouse_hook(mouse_press_event(&ev.xbutton));
+            if (ev.xbutton.button == 4 || ev.xbutton.button == 5) {
+              consumed = llua_mouse_hook(mouse_scroll_event(&ev.xbutton));
+            } else {
+              consumed = llua_mouse_hook(mouse_press_event(&ev.xbutton));
+            }
 #endif /* MOUSE_EVENTS */
             if (own_window.get(*state)) {
               /* if an ordinary window with decorations */
@@ -2191,7 +2195,9 @@ void main_loop() {
 
           case ButtonRelease:
 #ifdef MOUSE_EVENTS
-            llua_mouse_hook(mouse_release_event(&ev.xbutton));
+            if (ev.xbutton.button != 4 && ev.xbutton.button != 5) {
+              llua_mouse_hook(mouse_release_event(&ev.xbutton));
+            }
             /* don't care about pointer button release */
 #endif /* MOUSE_EVENTS */
             if (own_window.get(*state)) {

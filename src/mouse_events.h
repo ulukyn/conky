@@ -1,3 +1,23 @@
+/*
+ * mouse_events.h: conky support for mouse events
+ *
+ * Copyright (C) 2020 Tin Svagelj tin.svagelj@live.com
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
+
 #ifndef MOUSE_EVENTS_H
 #define MOUSE_EVENTS_H
 
@@ -39,6 +59,15 @@ struct mouse_move_event : public mouse_positioned_event {
   std::bitset<13> mods;  // held buttons and modifiers (ctrl, shift, ...)
 
   explicit mouse_move_event(XMotionEvent *ev);
+
+  void push_lua_data(lua_State *L) const;
+};
+
+struct mouse_scroll_event : public mouse_positioned_event {
+  std::bitset<13> mods;  // held buttons and modifiers (ctrl, shift, ...)
+  bool up = false;
+
+  explicit mouse_scroll_event(XButtonEvent *ev);
 
   void push_lua_data(lua_State *L) const;
 };

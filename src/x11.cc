@@ -999,7 +999,7 @@ static void init_window(lua::state &l __attribute__((unused)), bool own) {
                                         : 0)
 #endif
 #ifdef MOUSE_EVENTS
-                   | ButtonPressMask | ButtonReleaseMask | PointerMotionMask
+                   | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterWindowMask | LeaveWindowMask
 #endif
   );
   DBGP("leave init_window()");
