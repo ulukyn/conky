@@ -492,13 +492,17 @@ bool llua_mouse_hook(const EventT &ev) {
 
   ev.push_lua_table(lua_L);
 
-  if (lua_pcall(lua_L, 1, 0 /*TODO: Read return */, 0) != 0) {
+  bool result = false;
+  if (lua_pcall(lua_L, 1, 1, 0) != 0) {
     NORM_ERR("llua_mouse_hook: function %s execution failed: %s", func,
              lua_tostring(lua_L, -1));
-    lua_pop(lua_L, -1);
+    lua_pop(lua_L, 1);
+  } else {
+    result = lua_toboolean(lua_L, -1);
+    lua_pop(lua_L, 1);
   }
 
-  return true; /*TODO: Return based on Lua return */
+  return result;
 }
 
 template bool llua_mouse_hook<mouse_button_event>(const mouse_button_event &ev);

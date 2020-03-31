@@ -55,6 +55,10 @@ void llua_draw_pre_hook(void);
 void llua_draw_post_hook(void);
 
 #ifdef MOUSE_EVENTS
+/*
+  Takes a mouse_event as argument.
+  Returns true if event was properly consumed, false otherwise.
+ */
 template <typename EventT>
 bool llua_mouse_hook(const EventT &ev);
 #endif /* MOUSE_EVENTS */
