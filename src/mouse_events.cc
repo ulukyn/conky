@@ -96,12 +96,13 @@ void push_bitset(lua_State *L, std::bitset<N> it,
   for (size_t i = 0; i < N; i++) push_table_value(L, labels[i], it.test(i));
 }
 
+const std::array<std::string, 13> mod_names = {
+    {"shift", "lock", "control", "mod1", "num_lock", "mod3", "mod4", "mod5",
+     "mouse_left", "mouse_right", "mouse_middle", "scroll_up", "scroll_down"}};
+
 void push_mods(lua_State *L, std::bitset<13> mods) {
   lua_pushstring(L, "mods");
-  push_bitset(L, mods,
-              {"shift", "lock", "control", "mod1", "mod2", "mod3", "mod4",
-               "mod5", "mouse_left", "mouse_right", "mouse_middle", "scroll_up",
-               "scroll_down"});
+  push_bitset(L, mods, mod_names);
   lua_settable(L, -3);
 }
 

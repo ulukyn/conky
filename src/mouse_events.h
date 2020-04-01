@@ -25,8 +25,11 @@
 #include <cstdint>
 
 extern "C" {
-#include "X11/Xlib.h"
-#include "lua.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wvariadic-macros"
+#include <X11/Xlib.h>
+#pragma GCC diagnostic pop
+#include <lua.h>
 }
 
 enum mouse_event_type {
