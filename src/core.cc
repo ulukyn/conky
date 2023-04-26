@@ -1031,6 +1031,12 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ(save_coordinates, nullptr) obj->data.l =
       arg != nullptr ? strtol(arg, nullptr, 10) : 0;
   obj->callbacks.print = &new_save_coordinates;
+  END OBJ(save_position, nullptr) obj->data.l =
+      arg != nullptr ? atoi(arg) : 0;
+  obj->callbacks.print = &new_save_position;
+  END OBJ(get_save_coordinates, nullptr) obj->data.l =
+      arg != nullptr ? atoi(arg) : 0;
+  obj->callbacks.print = &get_save_coordinates;
   END OBJ_ARG(goto, nullptr, "goto needs arguments") obj->data.l =
       strtol(arg, nullptr, 10);
   obj->callbacks.print = &new_goto;

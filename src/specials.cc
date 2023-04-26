@@ -778,6 +778,19 @@ void new_save_coordinates(struct text_object *obj, char *p,
   new_special(p, SAVE_COORDINATES)->arg = obj->data.l;
 }
 
+void new_save_position(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, SAVE_POSITION)->arg = obj->data.l;
+}
+
+
+void get_save_coordinates(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+   snprintf(p, p_max_size, "%d %d", get_saved_coordinates_x(static_cast<int>(obj->data.l)), get_saved_coordinates_y(static_cast<int>(obj->data.l)));
+}
+
 void new_alignr(struct text_object *obj, char *p, unsigned int p_max_size) {
   if (p_max_size == 0) { return; }
   new_special(p, ALIGNR)->arg = dpi_scale(obj->data.l);

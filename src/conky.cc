@@ -1465,6 +1465,13 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
               cur_y - text_start_y - last_font_height;
           break;
 
+        case SAVE_POSITION:
+          saved_coordinates_x[static_cast<int>(current->arg)] =
+              cur_x - text_start_x;
+          saved_coordinates_y[static_cast<int>(current->arg)] =
+              cur_y - text_start_y - (font_height() / 2);
+          break;
+
         case TAB: {
           int start = current->arg;
           int step = current->width;
