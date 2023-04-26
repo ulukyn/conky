@@ -945,8 +945,8 @@ static int draw_mode; /* FG, BG or OUTLINE */
 #ifdef BUILD_GUI
 /*static*/ Colour current_color;
 
-static int saved_coordinates_x[100];
-static int saved_coordinates_y[100];
+static int saved_coordinates_x[10000];
+static int saved_coordinates_y[10000];
 
 int get_saved_coordinates_x(int i) { return saved_coordinates_x[i]; }
 int get_saved_coordinates_y(int i) { return saved_coordinates_y[i]; }
