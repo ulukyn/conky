@@ -772,6 +772,25 @@ void new_voffset(struct text_object *obj, char *p, unsigned int p_max_size) {
   new_special(p, VOFFSET)->arg = dpi_scale(obj->data.l);
 }
 
+void new_voffset_font(struct text_object *obj, char *p, unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, VOFFSET_FONT)->arg = dpi_scale(obj->data.l);
+}
+
+
+void new_save_font_height(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, SAVE_FONT_HEIGHT)->arg = obj->data.l;
+}
+
+void get_font_height(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  snprintf(p, p_max_size, "%d", get_saved_font_h(static_cast<int>(obj->data.l)));
+}
+
+
 void new_save_coordinates(struct text_object *obj, char *p,
                           unsigned int p_max_size) {
   if (p_max_size == 0) { return; }

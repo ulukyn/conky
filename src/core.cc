@@ -1028,6 +1028,15 @@ struct text_object *construct_text_object(char *s, const char *arg, long line,
   END OBJ(voffset, nullptr) obj->data.l =
       arg != nullptr ? strtol(arg, nullptr, 10) : 1;
   obj->callbacks.print = &new_voffset;
+  END OBJ(voffset_font, nullptr) obj->data.l =
+      arg != nullptr ? strtol(arg, nullptr, 10) : 1;
+  obj->callbacks.print = &new_voffset_font;
+  END OBJ(save_font_height, nullptr) obj->data.l =
+      arg != nullptr ? atoi(arg) : 0;
+  obj->callbacks.print = &new_save_font_height;
+  END OBJ(get_font_height, nullptr) obj->data.l =
+      arg != nullptr ? atoi(arg) : 0;
+  obj->callbacks.print = &get_font_height;
   END OBJ(save_coordinates, nullptr) obj->data.l =
       arg != nullptr ? strtol(arg, nullptr, 10) : 0;
   obj->callbacks.print = &new_save_coordinates;

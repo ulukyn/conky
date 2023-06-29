@@ -315,6 +315,7 @@ int dpi_scale(int value);
 
 int get_saved_coordinates_x(int);
 int get_saved_coordinates_y(int);
+int get_saved_font_h(int);
 
 /* defined in conky.c */
 int spaced_print(char *, int, const char *, int, ...)

@@ -54,6 +54,9 @@ enum special_types {
   GRAPH,
   OFFSET,
   VOFFSET,
+  VOFFSET_FONT,
+  SAVE_FONT_HEIGHT,
+  GET_FONT_HEIGHT,
   SAVE_COORDINATES,
   SAVE_POSITION,
   GET_SAVE_COORDINATES,
@@ -113,6 +116,9 @@ void new_bg(struct text_object *, char *, unsigned int);
 void new_outline(struct text_object *, char *, unsigned int);
 void new_offset(struct text_object *, char *, unsigned int);
 void new_voffset(struct text_object *, char *, unsigned int);
+void new_voffset_font(struct text_object *, char *, unsigned int);
+void new_save_font_height(struct text_object *, char *, unsigned int);
+void get_font_height(struct text_object *, char *, unsigned int);
 void new_save_coordinates(struct text_object *, char *, unsigned int);
 void new_save_position(struct text_object *, char *, unsigned int);
 void get_save_coordinates(struct text_object *, char *, unsigned int);

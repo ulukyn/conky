@@ -947,9 +947,11 @@ static int draw_mode; /* FG, BG or OUTLINE */
 
 static int saved_coordinates_x[10000];
 static int saved_coordinates_y[10000];
+static int saved_fonts_h[10];
 
 int get_saved_coordinates_x(int i) { return saved_coordinates_x[i]; }
 int get_saved_coordinates_y(int i) { return saved_coordinates_y[i]; }
+int get_saved_font_h(int i) { return saved_fonts_h[i]; }
 
 static int text_size_updater(char *s, int special_index) {
   int w = 0;
@@ -1430,6 +1432,11 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
             font_h = font_height();
           }
           break;
+
+        case SAVE_FONT_HEIGHT:
+          saved_fonts_h[static_cast<int>(current->arg)] =
+              font_height();
+          break;
 #endif /* BUILD_GUI */
         case FG:
           if (draw_mode == FG) {
@@ -1456,6 +1463,10 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
 
         case VOFFSET:
           cur_y += current->arg;
+          break;
+
+        case VOFFSET_FONT:
+          cur_y += current->arg - font_height();
           break;
 
         case SAVE_COORDINATES:
