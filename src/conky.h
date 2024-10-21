@@ -315,8 +315,6 @@ void set_updatereset(int);
 int get_updatereset(void);
 int get_total_updates(void);
 
-int dpi_scale(int value);
-
 int get_saved_coordinates_x(int);
 int get_saved_coordinates_y(int);
 int get_saved_font_h(int);
