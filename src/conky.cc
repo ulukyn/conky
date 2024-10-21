@@ -1438,7 +1438,7 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
           }
           break;
 
-        case SAVE_FONT_HEIGHT:
+        case text_node_t::SAVE_FONT_HEIGHT:
           saved_fonts_h[static_cast<int>(current->arg)] =
               font_height();
           break;
@@ -1476,16 +1476,16 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
 
         case text_node_t::SAVE_COORDINATES:
           saved_coordinates_x[static_cast<int>(current->arg)] =
-              cur_x - text_start_x;
+              cur_x - text_start.x();
           saved_coordinates_y[static_cast<int>(current->arg)] =
-              cur_y - text_start_y - last_font_height;
+              cur_y - text_start.y() - last_font_height;
           break;
 
         case text_node_t::SAVE_POSITION:
           saved_coordinates_x[static_cast<int>(current->arg)] =
-              cur_x - text_start_x;
+              cur_x - text_start.x();
           saved_coordinates_y[static_cast<int>(current->arg)] =
-              cur_y - text_start_y - (font_height() / 2);
+              cur_y - text_start.y() - (font_height() / 2);
           break;
 
         case text_node_t::TAB: {
