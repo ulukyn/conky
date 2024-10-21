@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -77,7 +77,7 @@ static char *backslash_escape(const char *src, char **templates,
             break;
           }
           if (tmpl_num == 0) {
-            CRIT_ERR(
+            CRIT_ERR_FREE(
                 nullptr, nullptr,
                 "invalid template argument \\0; arguments must start at \\1");
           }
@@ -210,8 +210,7 @@ char *find_and_replace_templates(const char *inbuf) {
         *(p - 1) = '\0';
       } else {
         // we ran into the end of string without finding a closing }, bark
-        CRIT_ERR(nullptr, nullptr,
-                 "cannot find a closing '}' in template expansion");
+        CRIT_ERR("cannot find a closing '}' in template expansion");
       }
     } else {
       templ = p + 1;
@@ -227,7 +226,7 @@ char *find_and_replace_templates(const char *inbuf) {
       outlen += len;
       *o = '\0';
       outbuf = static_cast<char *>(realloc(outbuf, outlen * sizeof(char)));
-      strncat(outbuf, tmpl_out, len);
+      strcat(outbuf, tmpl_out);
       free(tmpl_out);
       o = outbuf + strlen(outbuf);
     } else {

@@ -1,7 +1,6 @@
-import '@fontsource/fira-code/variable.css'
-import '@fontsource/inter/variable.css'
-import '@fontsource/newsreader/variable.css'
-import 'prismjs/themes/prism-tomorrow.css'
+import '@fontsource-variable/fira-code'
+import '@fontsource-variable/inter'
+import '@fontsource-variable/newsreader'
 import '../styles/globals.css'
 import { AppProps } from 'next/app'
 

@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -38,6 +38,7 @@
 #include <cerrno>
 #include <ctime>
 #include <vector>
+#include <wordexp.h>
 #include "config.h"
 #include "conky.h"
 #include "core.h"
@@ -130,13 +131,19 @@ double get_time() {
 }
 
 /* Converts '~/...' paths to '/home/blah/...'.  It's similar to
- * variable_substitute, except only cheques for $HOME and ~/ in
- * path. If HOME is unset it uses an empty string for substitution */
+ * variable_substitute, works for any enviroment variable */
 std::string to_real_path(const std::string &source) {
-  const char *homedir = getenv("HOME") != nullptr ? getenv("HOME") : "";
-  if (source.find("~/") == 0) { return homedir + source.substr(1); }
-  if (source.find("$HOME/") == 0) { return homedir + source.substr(5); }
-  return source;
+    wordexp_t p;
+    char **w;
+    int i;
+    const char *csource = source.c_str();
+    if (wordexp(csource, &p, 0) != 0) {
+        return nullptr;
+    }
+    w = p.we_wordv;
+    const char *resolved_path = strdup(w[0]);
+    wordfree(&p);
+    return std::string(resolved_path);
 }
 
 int open_fifo(const char *file, int *reported) {
@@ -352,7 +359,7 @@ void print_no_update(struct text_object *obj, char *p,
 
 #ifdef BUILD_GUI
 void scan_loadgraph_arg(struct text_object *obj, const char *arg) {
-  scan_graph(obj, arg, 0);
+  scan_graph(obj, arg, 0, FALSE);
 }
 
 double loadgraphval(struct text_object *obj) {
@@ -365,7 +372,7 @@ double loadgraphval(struct text_object *obj) {
 uint8_t cpu_percentage(struct text_object *obj) {
   if (static_cast<unsigned int>(obj->data.i) > info.cpu_count) {
     NORM_ERR("obj->data.i %i info.cpu_count %i", obj->data.i, info.cpu_count);
-    CRIT_ERR(nullptr, nullptr, "attempting to use more CPUs than you have!");
+    CRIT_ERR("attempting to use more CPUs than you have!");
   }
   if (info.cpu_usage != nullptr) {
     return round_to_positive_int(info.cpu_usage[obj->data.i] * 100.0);
@@ -376,7 +383,7 @@ uint8_t cpu_percentage(struct text_object *obj) {
 double cpu_barval(struct text_object *obj) {
   if (static_cast<unsigned int>(obj->data.i) > info.cpu_count) {
     NORM_ERR("obj->data.i %i info.cpu_count %i", obj->data.i, info.cpu_count);
-    CRIT_ERR(nullptr, nullptr, "attempting to use more CPUs than you have!");
+    CRIT_ERR("attempting to use more CPUs than you have!");
   }
   if (info.cpu_usage != nullptr) { return info.cpu_usage[obj->data.i]; }
   return 0.;
@@ -529,6 +536,12 @@ void print_cached(struct text_object *obj, char *p, unsigned int p_max_size) {
 void print_free_bufcache(struct text_object *obj, char *p,
                          unsigned int p_max_size) {
   human_readable(apply_base_multiplier(obj->data.s, info.free_bufcache), p,
+                 p_max_size);
+}
+
+void print_free_cached(struct text_object *obj, char *p,
+                       unsigned int p_max_size) {
+  human_readable(apply_base_multiplier(obj->data.s, info.free_cached), p,
                  p_max_size);
 }
 

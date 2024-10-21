@@ -3,7 +3,7 @@
 #
 # Please see COPYING for details
 #
-# Copyright (c) 2005-2021 Brenden Matthews, et. al. (see AUTHORS) All rights
+# Copyright (c) 2005-2024 Brenden Matthews, et. al. (see AUTHORS) All rights
 # reserved.
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -59,6 +59,8 @@ set(INCLUDE_SEARCH_PATH /usr/include /usr/local/include)
 # Set system vars
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(OS_LINUX true)
+else(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  set(OS_LINUX false)
 endif(CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
@@ -68,33 +70,47 @@ if(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
   if(BUILD_IRC)
     set(conky_libs ${conky_libs} -lssl -lcrypto)
   endif(BUILD_IRC)
+else(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+  set(OS_FREEBSD false)
 endif(CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
 
 if(CMAKE_SYSTEM_NAME MATCHES "DragonFly")
   set(OS_DRAGONFLY true)
   set(conky_libs ${conky_libs} -ldevstat)
+else(CMAKE_SYSTEM_NAME MATCHES "DragonFly")
+  set(OS_DRAGONFLY false)
 endif(CMAKE_SYSTEM_NAME MATCHES "DragonFly")
 
 if(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
   set(OS_OPENBSD true)
+else(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+  set(OS_OPENBSD false)
 endif(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
 
 if(CMAKE_SYSTEM_NAME MATCHES "SunOS")
   set(OS_SOLARIS true)
   set(conky_libs ${conky_libs} -lkstat)
+else(CMAKE_SYSTEM_NAME MATCHES "SunOS")
+  set(OS_SOLARIS false)
 endif(CMAKE_SYSTEM_NAME MATCHES "SunOS")
 
 if(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
   set(OS_NETBSD true)
+else(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
+  set(OS_NETBSD false)
 endif(CMAKE_SYSTEM_NAME MATCHES "NetBSD")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Haiku")
   set(OS_HAIKU true)
   set(conky_libs ${conky_libs} -lnetwork -lintl)
+else(CMAKE_SYSTEM_NAME MATCHES "Haiku")
+  set(OS_HAIKU false)
 endif(CMAKE_SYSTEM_NAME MATCHES "Haiku")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
   set(OS_DARWIN true)
+else(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+  set(OS_DARWIN false)
 endif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
 if(NOT OS_LINUX
@@ -402,6 +418,30 @@ if(BUILD_X11)
 
       set(conky_libs ${conky_libs} ${X11_Xfixes_LIB})
     endif(BUILD_XFIXES)
+
+    # check for Xinput
+    if(BUILD_XINPUT)
+      if(NOT X11_Xinput_FOUND)
+        message(FATAL_ERROR "Unable to find Xinput library")
+      endif(NOT X11_Xinput_FOUND)
+
+      set(conky_libs ${conky_libs} ${X11_Xinput_LIB})
+    endif(BUILD_XINPUT)
+
+    if(X11_xcb_FOUND)
+      set(HAVE_XCB true)
+      set(conky_libs ${conky_libs} ${X11_xcb_LIB})
+      set(conky_includes ${conky_includes} ${X11_xcb_INCLUDE_PATH})
+
+      if(X11_xcb_errors_FOUND)
+        set(HAVE_XCB_ERRORS true)
+        set(conky_libs ${conky_libs} ${X11_xcb_LIB} ${X11_xcb_errors_LIB})
+      else(X11_xcb_errors_FOUND)
+        set(HAVE_XCB_ERRORS false)
+      endif(X11_xcb_errors_FOUND)
+    else(X11_xcb_FOUND)
+      set(HAVE_XCB false)
+    endif(X11_xcb_FOUND)
   else(X11_FOUND)
     message(FATAL_ERROR "Unable to find X11 library")
   endif(X11_FOUND)
@@ -432,6 +472,14 @@ if(BUILD_WAYLAND)
     set(conky_includes ${conky_includes} ${EPOLL_INCLUDE_DIRS})
   endif(OS_DARWIN OR OS_DRAGONFLY OR OS_FREEBSD OR OS_NETBSD OR OS_OPENBSD)
 
+  pkg_check_modules(CAIRO REQUIRED cairo)
+  set(conky_libs ${conky_libs} ${CAIRO_LIBRARIES})
+  set(conky_includes ${conky_includes} ${CAIRO_INCLUDE_DIR})
+
+  pkg_check_modules(PANGO REQUIRED pango)
+  set(conky_libs ${conky_libs} ${PANGO_LIBRARIES})
+  set(conky_includes ${conky_includes} ${PANGO_INCLUDE_DIRS})
+
   pkg_check_modules(PANGOCAIRO pangocairo)
   set(conky_libs ${conky_libs} ${PANGOCAIRO_LIBRARIES})
   set(conky_includes ${conky_includes} ${PANGOCAIRO_INCLUDE_DIRS})
@@ -451,34 +499,39 @@ set(conky_libs ${conky_libs} ${LUA_LIBRARIES})
 set(conky_includes ${conky_includes} ${LUA_INCLUDE_DIR})
 include_directories(3rdparty/toluapp/include)
 
-if(BUILD_X11)
-  # Check for libraries used by Lua bindings
-  if(BUILD_LUA_CAIRO)
-    pkg_check_modules(CAIRO REQUIRED cairo>=1.14 cairo-xlib)
-    set(luacairo_libs ${CAIRO_LIBRARIES} ${LUA_LIBRARIES})
-    set(luacairo_includes ${CAIRO_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
-    find_program(APP_PATCH patch)
+# Check for libraries used by Lua bindings
+if(BUILD_LUA_CAIRO)
+  pkg_check_modules(CAIRO REQUIRED cairo>=1.14)
+  set(luacairo_libs ${CAIRO_LIBRARIES} ${LUA_LIBRARIES})
+  set(luacairo_includes ${CAIRO_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
 
-    if(NOT APP_PATCH)
-      message(FATAL_ERROR "Unable to find program 'patch'")
-    endif(NOT APP_PATCH)
-  endif(BUILD_LUA_CAIRO)
+  if(BUILD_LUA_CAIRO_XLIB)
+    pkg_check_modules(CAIROXLIB REQUIRED cairo-xlib)
+    set(luacairo_libs ${CAIROXLIB_LIBRARIES} ${luacairo_libs})
+    set(luacairo_includes ${CAIROXLIB_INCLUDE_DIRS} ${luacairo_includes})
+  endif(BUILD_LUA_CAIRO_XLIB)
 
-  if(BUILD_LUA_IMLIB2)
-    pkg_search_module(IMLIB2 REQUIRED imlib2 Imlib2)
-    set(luaimlib2_libs ${IMLIB2_LIBS} ${IMLIB2_LDFLAGS} ${LUA_LIBRARIES})
-    set(luaimlib2_includes
-      ${IMLIB2_INCLUDE_DIRS}
-      ${LUA_INCLUDE_DIR}
-      ${X11_INCLUDE_DIR})
-  endif(BUILD_LUA_IMLIB2)
+  find_program(APP_PATCH patch)
 
-  if(BUILD_LUA_RSVG)
-    pkg_check_modules(RSVG REQUIRED librsvg-2.0>=2.52)
-    set(luarsvg_libs ${RSVG_LIBRARIES} ${LUA_LIBRARIES})
-    set(luarsvg_includes ${RSVG_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
-  endif(BUILD_LUA_RSVG)
-endif(BUILD_X11)
+  if(NOT APP_PATCH)
+    message(FATAL_ERROR "Unable to find program 'patch'")
+  endif(NOT APP_PATCH)
+endif(BUILD_LUA_CAIRO)
+
+if(BUILD_LUA_IMLIB2)
+  pkg_search_module(IMLIB2 REQUIRED imlib2 Imlib2)
+  set(luaimlib2_libs ${IMLIB2_LIBS} ${IMLIB2_LDFLAGS} ${LUA_LIBRARIES})
+  set(luaimlib2_includes
+    ${IMLIB2_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIR}
+    ${X11_INCLUDE_DIR})
+endif(BUILD_LUA_IMLIB2)
+
+if(BUILD_LUA_RSVG)
+  pkg_check_modules(RSVG REQUIRED librsvg-2.0>=2.52)
+  set(luarsvg_libs ${RSVG_LIBRARIES} ${LUA_LIBRARIES})
+  set(luarsvg_includes ${RSVG_INCLUDE_DIRS} ${LUA_INCLUDE_DIR})
+endif(BUILD_LUA_RSVG)
 
 if(BUILD_AUDACIOUS)
   set(WANT_GLIB true)
@@ -615,6 +668,16 @@ if(BUILD_DOCS OR BUILD_EXTRAS)
     )
   endif()
 endif(BUILD_DOCS OR BUILD_EXTRAS)
+
+if(BUILD_COLOUR_NAME_MAP)
+  find_program(APP_GPERF gperf)
+
+  if(NOT APP_GPERF)
+    message(FATAL_ERROR "Unable to find program 'gperf' (required at build-time as of Conky v1.20.2)")
+  endif(NOT APP_GPERF)
+
+  mark_as_advanced(APP_GPERF)
+endif(BUILD_COLOUR_NAME_MAP)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(DEBUG true)

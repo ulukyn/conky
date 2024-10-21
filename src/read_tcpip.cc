@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -65,8 +65,9 @@ void parse_read_tcpip_arg(struct text_object *obj, const char *arg,
     strncpy(rtd->host, "localhost", 10);
   }
   if (rtd->port < 1 || rtd->port > 65535) {
-    CRIT_ERR(obj, free_at_crash,
-             "read_tcp and read_udp need a port from 1 to 65535 as argument");
+    CRIT_ERR_FREE(
+        obj, free_at_crash,
+        "read_tcp and read_udp need a port from 1 to 65535 as argument");
   }
 
   obj->data.opaque = rtd;
@@ -91,15 +92,15 @@ void parse_tcp_ping_arg(struct text_object *obj, const char *arg,
       break;
     default:  // this point should never be reached
       free(hostname);
-      CRIT_ERR(obj, free_at_crash, "tcp_ping: Reading arguments failed");
+      CRIT_ERR_FREE(obj, free_at_crash, "tcp_ping: Reading arguments failed");
   }
   if ((he = gethostbyname(hostname)) == nullptr) {
     NORM_ERR("tcp_ping: Problem with resolving '%s', using 'localhost' instead",
              hostname);
     if ((he = gethostbyname("localhost")) == nullptr) {
       free(hostname);
-      CRIT_ERR(obj, free_at_crash,
-               "tcp_ping: Resolving 'localhost' also failed");
+      CRIT_ERR_FREE(obj, free_at_crash,
+                    "tcp_ping: Resolving 'localhost' also failed");
     }
   }
   if (he != nullptr) {
@@ -132,10 +133,12 @@ void print_tcp_ping(struct text_object *obj, char *p, unsigned int p_max_size) {
     if (errno == EINPROGRESS) {  // but EINPROGRESS is only a "false fail"
       gettimeofday(&tv1, nullptr);
       if (select(sock + 1, nullptr, &writefds, nullptr, &timeout) != -1) {
+        int ret = 0;
+        socklen_t len = sizeof(ret);
         gettimeofday(&tv2, nullptr);
         usecdiff =
             ((tv2.tv_sec - tv1.tv_sec) * 1000000) + tv2.tv_usec - tv1.tv_usec;
-        if (usecdiff <= TCP_PING_TIMEOUT * 1000000) {
+        if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &ret, &len) == 0 && ret == 0) {
           snprintf(p, p_max_size, "%llu", (usecdiff / 1000U));
         } else {
 #define TCP_PING_FAILED "down"

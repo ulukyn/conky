@@ -4,7 +4,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -111,14 +111,14 @@ void parse_ical_args(struct text_object *obj, const char *arg,
   if (sscanf(arg, "%d %s", &num, filename) != 2) {
     free(filename);
     free(obj);
-    CRIT_ERR(free_at_crash, free_at_crash2,
-             "wrong number of arguments for $ical");
+    CRIT_ERR_FREE(free_at_crash, free_at_crash2,
+                  "wrong number of arguments for $ical");
   }
   file = fopen(filename, "r");
   if (!file) {
     free(obj);
     free(free_at_crash);
-    CRIT_ERR(filename, free_at_crash2, "Can't read file %s", filename);
+    CRIT_ERR_FREE(filename, free_at_crash2, "Can't read file %s", filename);
     return;
   }
   free(filename);

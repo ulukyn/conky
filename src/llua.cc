@@ -3,7 +3,7 @@
  * Conky, a system monitor, based on torsmo
  *
  * Copyright (c) 2009 Toni Spets
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -20,19 +20,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "config.h"
 
-#include "llua.h"
-#include <config.h>
 #include "build.h"
 #include "conky.h"
+#include "geometry.h"
+#include "llua.h"
 #include "logging.h"
-
-#ifdef BUILD_X11
-#include "x11.h"
-#endif /* BUILD_X11 */
 
 #ifdef BUILD_GUI
 #include "gui.h"
+
+#ifdef BUILD_X11
+#include "x11-settings.h"
+#include "x11.h"
+#endif /* BUILD_X11 */
+
+#ifdef BUILD_MOUSE_EVENTS
+#include "mouse-events.h"
+#endif /* BUILD_MOUSE_EVENTS */
 #endif /* BUILD_GUI */
 
 extern "C" {
@@ -49,6 +55,9 @@ void llua_append_notify(const char *name);
 void llua_rm_notifies(void);
 static int llua_block_notify = 0;
 #endif /* HAVE_SYS_INOTIFY_H */
+
+// POSIX compliant
+#include <sys/stat.h>
 
 static void llua_load(const char *script);
 
@@ -172,15 +181,11 @@ void llua_init() {
   lua_setfield(lua_L, -3, "cpath");
   lua_pop(lua_L, 2);
 
-  lua_pushstring(lua_L, PACKAGE_NAME " " VERSION " compiled " BUILD_DATE
-                                     " for " BUILD_ARCH);
+  lua_pushstring(lua_L, PACKAGE_NAME " " VERSION " compiled for " BUILD_ARCH);
   lua_setglobal(lua_L, "conky_build_info");
 
   lua_pushstring(lua_L, VERSION);
   lua_setglobal(lua_L, "conky_version");
-
-  lua_pushstring(lua_L, BUILD_DATE);
-  lua_setglobal(lua_L, "conky_build_date");
 
   lua_pushstring(lua_L, BUILD_ARCH);
   lua_setglobal(lua_L, "conky_build_arch");
@@ -203,12 +208,26 @@ void llua_init() {
 #endif /* BUILD_X11 */
 }
 
+inline bool file_exists(const char *path) {
+  struct stat buffer;
+  return (stat(path, &buffer) == 0);
+}
+
 void llua_load(const char *script) {
   int error;
 
+  std::string path = to_real_path(script);
+
+  if (!file_exists(path.c_str())) {
+    NORM_ERR("llua_load: specified script file '%s' doesn't exist",
+             path.c_str());
+    // return without initializing lua_L because other parts of the code rely
+    // on it being null if the script is not loaded
+    return;
+  }
+
   llua_init();
 
-  std::string path = to_real_path(script);
   error = luaL_dofile(lua_L, path.c_str());
   if (error != 0) {
     NORM_ERR("llua_load: %s", lua_tostring(lua_L, -1));
@@ -496,14 +515,44 @@ bool llua_mouse_hook(const EventT &ev) {
   if ((lua_L == nullptr) || lua_mouse_hook.get(*state).empty()) {
     return false;
   }
-  const std::string func = lua_mouse_hook.get(*state);
-  lua_getglobal(lua_L, lua_mouse_hook.get(*state).c_str());
+  const std::string raw_hook_name = lua_mouse_hook.get(*state);
+  std::string hook_name;
+  if (raw_hook_name.rfind("conky_", 0) == 0) {
+    hook_name = raw_hook_name;
+  } else {
+    hook_name = "conky_" + raw_hook_name;
+  }
+
+  int ty = lua_getglobal(lua_L, hook_name.c_str());
+  if (ty == LUA_TNIL) {
+    int ty_raw = lua_getglobal(lua_L, raw_hook_name.c_str());
+    if (ty_raw == LUA_TFUNCTION) {
+      // TODO: (1.22.0) Force conky_ prefix on use_mouse_hook like llua_do_call
+      // does
+      // - keep only else case, remove ty_raw and make hook_name const.
+      NORM_ERR(
+          "llua_mouse_hook: hook %s declaration is missing 'conky_' prefix",
+          raw_hook_name.c_str());
+      hook_name = raw_hook_name;
+      ty = ty_raw;
+      lua_insert(lua_L, -2);
+      lua_pop(lua_L, 1);
+    } else {
+      NORM_ERR("llua_mouse_hook: hook %s is not defined", hook_name.c_str());
+      lua_pop(lua_L, 2);
+      return false;
+    }
+  } else if (ty != LUA_TFUNCTION) {
+    NORM_ERR("llua_mouse_hook: hook %s is not a function", hook_name.c_str());
+    lua_pop(lua_L, 1);
+    return false;
+  }
 
   ev.push_lua_table(lua_L);
 
   bool result = false;
-  if (lua_pcall(lua_L, 1, 1, 0) != 0) {
-    NORM_ERR("llua_mouse_hook: function %s execution failed: %s", func.c_str(),
+  if (lua_pcall(lua_L, 1, 1, 0) != LUA_OK) {
+    NORM_ERR("llua_mouse_hook: hook %s execution failed: %s", hook_name.c_str(),
              lua_tostring(lua_L, -1));
     lua_pop(lua_L, 1);
   } else {
@@ -514,11 +563,14 @@ bool llua_mouse_hook(const EventT &ev) {
   return result;
 }
 
-template bool llua_mouse_hook<mouse_scroll_event>(const mouse_scroll_event &ev);
-template bool llua_mouse_hook<mouse_button_event>(const mouse_button_event &ev);
-template bool llua_mouse_hook<mouse_move_event>(const mouse_move_event &ev);
-template bool llua_mouse_hook<mouse_crossing_event>(
-    const mouse_crossing_event &ev);
+template bool llua_mouse_hook<conky::mouse_scroll_event>(
+    const conky::mouse_scroll_event &ev);
+template bool llua_mouse_hook<conky::mouse_button_event>(
+    const conky::mouse_button_event &ev);
+template bool llua_mouse_hook<conky::mouse_move_event>(
+    const conky::mouse_move_event &ev);
+template bool llua_mouse_hook<conky::mouse_crossing_event>(
+    const conky::mouse_crossing_event &ev);
 #endif /* BUILD_MOUSE_EVENTS */
 
 void llua_set_userdata(const char *key, const char *type, void *value) {
@@ -526,8 +578,7 @@ void llua_set_userdata(const char *key, const char *type, void *value) {
   lua_setfield(lua_L, -2, key);
 }
 
-void llua_setup_window_table(int text_start_x, int text_start_y, int text_width,
-                             int text_height) {
+void llua_setup_window_table(conky::rect<int> text_rect) {
   if (lua_L == nullptr) { return; }
   lua_newtable(lua_L);
 
@@ -542,25 +593,24 @@ void llua_setup_window_table(int text_start_x, int text_start_y, int text_width,
 #ifdef BUILD_GUI
   if (out_to_gui(*state)) {
 #ifdef BUILD_X11
-    llua_set_number("width", window.width);
-    llua_set_number("height", window.height);
+    llua_set_number("width", window.geometry.width());
+    llua_set_number("height", window.geometry.height());
 #endif /*BUILD_X11*/
     llua_set_number("border_inner_margin", border_inner_margin.get(*state));
     llua_set_number("border_outer_margin", border_outer_margin.get(*state));
     llua_set_number("border_width", border_width.get(*state));
 
-    llua_set_number("text_start_x", text_start_x);
-    llua_set_number("text_start_y", text_start_y);
-    llua_set_number("text_width", text_width);
-    llua_set_number("text_height", text_height);
+    llua_set_number("text_start_x", text_rect.x());
+    llua_set_number("text_start_y", text_rect.y());
+    llua_set_number("text_width", text_rect.width());
+    llua_set_number("text_height", text_rect.height());
 
     lua_setglobal(lua_L, "conky_window");
   }
 #endif /*BUILD_GUI*/
 }
 
-void llua_update_window_table(int text_start_x, int text_start_y,
-                              int text_width, int text_height) {
+void llua_update_window_table(conky::rect<int> text_rect) {
   if (lua_L == nullptr) { return; }
 
   lua_getglobal(lua_L, "conky_window");
@@ -571,14 +621,14 @@ void llua_update_window_table(int text_start_x, int text_start_y,
   }
 
 #ifdef BUILD_X11
-  llua_set_number("width", window.width);
-  llua_set_number("height", window.height);
+  llua_set_number("width", window.geometry.width());
+  llua_set_number("height", window.geometry.height());
 #endif /*BUILD_X11*/
 
-  llua_set_number("text_start_x", text_start_x);
-  llua_set_number("text_start_y", text_start_y);
-  llua_set_number("text_width", text_width);
-  llua_set_number("text_height", text_height);
+  llua_set_number("text_start_x", text_rect.x());
+  llua_set_number("text_start_y", text_rect.y());
+  llua_set_number("text_width", text_rect.width());
+  llua_set_number("text_height", text_rect.height());
 
   lua_setglobal(lua_L, "conky_window");
 }

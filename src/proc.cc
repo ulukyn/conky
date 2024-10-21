@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *   (see AUTHORS)
  * All rights reserved.
  *
@@ -439,7 +439,7 @@ void scan_cmdline_to_pid_arg(struct text_object *obj, const char *arg,
     }
     if (obj->data.s[i - 1] == ' ') { obj->data.s[i - 1] = 0; }
   } else {
-    CRIT_ERR(obj, free_at_crash, "${cmdline_to_pid commandline}");
+    CRIT_ERR_FREE(obj, free_at_crash, "${cmdline_to_pid commandline}");
   }
 }
 

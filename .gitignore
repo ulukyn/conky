@@ -11,22 +11,32 @@ doc/*.html
 Makefile
 CMakeCache.txt
 CMakeFiles
+cmake_install.cmake
+cmake_uninstall.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# Generated files
 data/convertconf.h
 data/defconfig.h
-lua/libcairo-orig.c
-lua/libcairo.c
-lua/libimlib2.c
 *.so
 *.a
 /config.h
+/build.h
+src/colour-names.hh
 
 # Compiler cache
 .cache
 
-# Ignore vscode stuff
-.vscode
+# Ignore (most) vscode stuff
+.vscode/*
 *.code-workspace
+# Allow vscode recommended extensions
+!.vscode/extensions.json
 .idea/
 
 # Ignore nix stuff
 /result
+
+# Ignore direnv
+.direnv

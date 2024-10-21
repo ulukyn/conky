@@ -1,19 +1,21 @@
-import Fuse from 'fuse.js'
+import Fuse, { FuseIndexRecords } from 'fuse.js'
 import { getConfigSettings, getLua, getVariables } from './doc-utils'
+
 export interface SearchItem {
   kind: string
   name: string
   desc: string
 }
+
 export interface SearchIndex {
   index: {
     keys: readonly string[]
-    records: Fuse.FuseIndexRecords
+    records: FuseIndexRecords
   }
   list: SearchItem[]
 }
 
-export function getSearchIndex() {
+export function createSearchIndex(): SearchIndex {
   const cs: SearchItem[] = getConfigSettings().values.map((v) => ({
     kind: 'config',
     name: v.name,

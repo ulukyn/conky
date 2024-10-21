@@ -9,7 +9,7 @@
  * Please see COPYING for details
  *
  * Copyright (c) 2004, Hannu Saransaari and Lauri Hakkarainen
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -334,7 +334,7 @@ void parse_net_stat_graph_arg(struct text_object *obj, const char *arg,
                               void *free_at_crash) {
   /* scan arguments and get interface name back */
   auto [buf, skip] = scan_command(arg);
-  scan_graph(obj, arg + skip, 0);
+  scan_graph(obj, arg + skip, 0, TRUE);
 
   // default to DEFAULTNETDEV
   if (buf != nullptr) {
@@ -530,7 +530,7 @@ int interface_up(struct text_object *obj) {
 #else
   if ((fd = socket(PF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0)) < 0) {
 #endif
-    CRIT_ERR(nullptr, nullptr, "could not create sockfd");
+    CRIT_ERR("could not create sockfd");
     return 0;
   }
   strncpy(ifr.ifr_name, dev, IFNAMSIZ);

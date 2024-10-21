@@ -4,7 +4,7 @@
  *
  * Please see COPYING for details
  *
- * Copyright (c) 2005-2021 Brenden Matthews, Philip Kovacs, et. al.
+ * Copyright (c) 2005-2024 Brenden Matthews, Philip Kovacs, et. al.
  *	(see AUTHORS)
  * All rights reserved.
  *
@@ -57,8 +57,6 @@ int get_entropy_poolsize(unsigned int *);
 int update_stat(void);
 
 void print_distribution(struct text_object *, char *, unsigned int);
-
-void determine_longstat_file(void);
 
 extern char e_iface[64];
 extern char interfaces_arr[MAX_NET_INTERFACES][64];
