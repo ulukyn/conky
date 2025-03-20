@@ -49,7 +49,7 @@ struct image_list_s {
 };
 
 struct image_list_s *image_list_start, *image_list_end;
-std::array<std::array<int, 2>, 100> saved_coordinates;
+std::array<std::array<int, 2>, 10000> saved_coordinates;
 
 /* areas to update */
 Imlib_Updates updates, current_update;

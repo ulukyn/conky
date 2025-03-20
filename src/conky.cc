@@ -929,12 +929,16 @@ static draw_mode_t draw_mode; /* FG, BG or OUTLINE */
 #ifdef BUILD_GUI
 /*static*/ Colour current_color;
 
-static int saved_coordinates_x[10000];
-static int saved_coordinates_y[10000];
 static int saved_fonts_h[10];
 
-int get_saved_coordinates_x(int i) { return saved_coordinates_x[i]; }
-int get_saved_coordinates_y(int i) { return saved_coordinates_y[i]; }
+int get_saved_coordinates_x(int i) {
+  const auto &coordinates = saved_coordinates.at(static_cast<size_t>(i));
+  return coordinates[0];
+  }
+int get_saved_coordinates_y(int i) {
+  const auto &coordinates = saved_coordinates.at(static_cast<size_t>(i));
+  return coordinates[1];
+  }
 int get_saved_font_h(int i) { return saved_fonts_h[i]; }
 
 static int text_size_updater(char *s, int special_index) {
@@ -1479,17 +1483,19 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
           break;
 
         case text_node_t::SAVE_COORDINATES:
-          saved_coordinates_x[static_cast<int>(current->arg)] =
-              cur_x - text_start.x();
-          saved_coordinates_y[static_cast<int>(current->arg)] =
-              cur_y - text_start.y() - last_font_height;
+#ifdef BUILD_IMLIB2
+          saved_coordinates[static_cast<int>(current->arg)] =
+              std::array<int, 2>{cur_x - text_start.x(),
+                                 cur_y - text_start.y() - last_font_height};
+#endif /* BUILD_IMLIB2 */
           break;
 
         case text_node_t::SAVE_POSITION:
-          saved_coordinates_x[static_cast<int>(current->arg)] =
-              cur_x - text_start.x();
-          saved_coordinates_y[static_cast<int>(current->arg)] =
-              cur_y - text_start.y() - (font_height() / 2);
+#ifdef BUILD_IMLIB2
+          saved_coordinates[static_cast<int>(current->arg)] =
+              std::array<int, 2>{cur_x - text_start.x(),
+                                 cur_y - text_start.y() - (font_height() / 2)};
+#endif /* BUILD_IMLIB2 */
           break;
 
         case text_node_t::TAB: {

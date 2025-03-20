@@ -34,7 +34,7 @@
 #include <X11/Xlib.h>
 #pragma GCC diagnostic pop
 
-using saved_coordinates_t = std::array<std::array<int, 2>, 100>;
+using saved_coordinates_t = std::array<std::array<int, 2>, 10000>;
 extern saved_coordinates_t saved_coordinates;
 
 void cimlib_add_image(const char *args);
