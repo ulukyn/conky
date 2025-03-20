@@ -311,7 +311,7 @@ bool scan_graph(struct text_object *obj, const char *argstr, double defscale, ch
   }
 
   /* set MINHEIGHT to specified value if '-m' specified.
-   * It doesn't matter where the argument is exactly. 
+   * It doesn't matter where the argument is exactly.
    * Accepted values are from [0-5] */
   const char *position = strstr(argstr, " " MINHEIGHT);
   if ((position != nullptr) ||
@@ -356,11 +356,11 @@ bool scan_graph(struct text_object *obj, const char *argstr, double defscale, ch
   last_colour_name[0] = '\0';
   g->scale = defscale;
 
-  /* [height],[width] [color1] [color2] 
-   * This could match as [height],[width] [scale] [-l | -t], 
+  /* [height],[width] [color1] [color2]
+   * This could match as [height],[width] [scale] [-l | -t],
    * therfore we ensure last_colour_name is not TEMPGRAD or LOGGRAPH */
   if (sscanf(argstr, "%d,%d %s %s", &g->height, &g->width, first_colour_name,
-             last_colour_name) == 4 && 
+             last_colour_name) == 4 &&
              strchr(last_colour_name,'-') == NULL) {
     apply_graph_colours(g, first_colour_name, last_colour_name);
     return true;
@@ -398,11 +398,11 @@ bool scan_graph(struct text_object *obj, const char *argstr, double defscale, ch
   last_colour_name[0] = '\0';
   g->scale = defscale;
 
-  /* [color1] [color2] 
-   * This could match as [scale] [-l | -t], 
+  /* [color1] [color2]
+   * This could match as [scale] [-l | -t],
    * therfore we ensure last_colour_name is not TEMPGRAD or LOGGRAPH */
   if (sscanf(argstr, "%s %s", first_colour_name, last_colour_name) == 2 &&
-             strchr(last_colour_name,'-') == NULL) { 
+             strchr(last_colour_name,'-') == NULL) {
     apply_graph_colours(g, first_colour_name, last_colour_name);
     return true;
   }
@@ -559,7 +559,7 @@ static void graph_append(struct special_node *graph, double f, char showaslog) {
           maxspeedval = graph->scale;
         }
         graph->scale = maxspeedval;
-        /* If the currentmax is the maxspeedval and 
+        /* If the currentmax is the maxspeedval and
          * currentmax location is at the last position
          * Then we reset our maxspeedval */
         if(*currentmax == maxspeedval && currentmax == (graph->graph + graph->width - 1)){
@@ -862,10 +862,42 @@ void new_voffset(struct text_object *obj, char *p, unsigned int p_max_size) {
   new_special(p, text_node_t::VOFFSET)->arg = dpi_scale(obj->data.l);
 }
 
+void new_voffset_font(struct text_object *obj, char *p, unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, text_node_t::VOFFSET_FONT)->arg = dpi_scale(obj->data.l);
+}
+
+
+void new_save_font_height(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, text_node_t::SAVE_FONT_HEIGHT)->arg = obj->data.l;
+}
+
+void get_font_height(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  snprintf(p, p_max_size, "%d", get_saved_font_h(static_cast<int>(obj->data.l)));
+}
+
+
 void new_save_coordinates(struct text_object *obj, char *p,
                           unsigned int p_max_size) {
   if (p_max_size == 0) { return; }
   new_special(p, text_node_t::SAVE_COORDINATES)->arg = obj->data.l;
+}
+
+void new_save_position(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+  new_special(p, text_node_t::SAVE_POSITION)->arg = obj->data.l;
+}
+
+
+void get_save_coordinates(struct text_object *obj, char *p,
+                          unsigned int p_max_size) {
+  if (p_max_size == 0) { return; }
+   snprintf(p, p_max_size, "%d %d", get_saved_coordinates_x(static_cast<int>(obj->data.l)), get_saved_coordinates_y(static_cast<int>(obj->data.l)));
 }
 
 void new_alignr(struct text_object *obj, char *p, unsigned int p_max_size) {

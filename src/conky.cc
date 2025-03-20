@@ -929,6 +929,14 @@ static draw_mode_t draw_mode; /* FG, BG or OUTLINE */
 #ifdef BUILD_GUI
 /*static*/ Colour current_color;
 
+static int saved_coordinates_x[10000];
+static int saved_coordinates_y[10000];
+static int saved_fonts_h[10];
+
+int get_saved_coordinates_x(int i) { return saved_coordinates_x[i]; }
+int get_saved_coordinates_y(int i) { return saved_coordinates_y[i]; }
+int get_saved_font_h(int i) { return saved_fonts_h[i]; }
+
 static int text_size_updater(char *s, int special_index) {
   int w = 0;
   char *p;
@@ -997,8 +1005,8 @@ static inline void set_foreground_color(Colour c) {
   for (auto output : display_outputs()) output->set_foreground_color(c);
 }
 
-static inline void draw_graph_bars(special_node *current, std::unique_ptr<Colour[]>& tmpcolour, 
-                            conky::vec2i& text_offset, int i, int &j, int w, 
+static inline void draw_graph_bars(special_node *current, std::unique_ptr<Colour[]>& tmpcolour,
+                            conky::vec2i& text_offset, int i, int &j, int w,
                             int colour_idx, int cur_x, int by, int h) {
   double graphheight = current->graph[j] * (h - 1) / current->scale;
   /* Check if graphheight is less than the minheight threshold, if so we must change it to the threshold */
@@ -1331,13 +1339,13 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
               colour_idx = 0;
               if(current->invertx){
                 for (i = 0; i <= w - 2; i++) {
-                  draw_graph_bars(current, tmpcolour, text_offset, 
+                  draw_graph_bars(current, tmpcolour, text_offset,
                   i, j, w, colour_idx, cur_x, by, h);
                 }
               }
               else{
                 for (i = w - 2; i > -1; i--) {
-                  draw_graph_bars(current, tmpcolour, text_offset, 
+                  draw_graph_bars(current, tmpcolour, text_offset,
                   i, j, w, colour_idx, cur_x, by, h);
                 }
               }
@@ -1433,6 +1441,11 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
             font_h = font_height();
           }
           break;
+
+        case text_node_t::SAVE_FONT_HEIGHT:
+          saved_fonts_h[static_cast<int>(current->arg)] =
+              font_height();
+          break;
 #endif /* BUILD_GUI */
         case text_node_t::FG:
           if (draw_mode == draw_mode_t::FG) {
@@ -1461,12 +1474,22 @@ int draw_each_line_inner(char *s, int special_index, int last_special_applied) {
           cur_y += current->arg;
           break;
 
+        case text_node_t::VOFFSET_FONT:
+          cur_y += current->arg - font_height();
+          break;
+
         case text_node_t::SAVE_COORDINATES:
-#ifdef BUILD_IMLIB2
-          saved_coordinates[static_cast<int>(current->arg)] =
-              std::array<int, 2>{cur_x - text_start.x(),
-                                 cur_y - text_start.y() - last_font_height};
-#endif /* BUILD_IMLIB2 */
+          saved_coordinates_x[static_cast<int>(current->arg)] =
+              cur_x - text_start.x();
+          saved_coordinates_y[static_cast<int>(current->arg)] =
+              cur_y - text_start.y() - last_font_height;
+          break;
+
+        case text_node_t::SAVE_POSITION:
+          saved_coordinates_x[static_cast<int>(current->arg)] =
+              cur_x - text_start.x();
+          saved_coordinates_y[static_cast<int>(current->arg)] =
+              cur_y - text_start.y() - (font_height() / 2);
           break;
 
         case text_node_t::TAB: {
