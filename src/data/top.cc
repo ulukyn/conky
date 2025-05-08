@@ -29,6 +29,9 @@
  */
 
 #include "top.h"
+
+#include <cstring>
+
 #include "../logging.h"
 #include "../prioqueue.h"
 
@@ -102,6 +105,14 @@ static void unhash_all_processes() {
 struct process *get_first_process() { return first_process; }
 
 void free_all_processes() {
+  // Before freeing all the things, we need to clear globals pointing 'em.
+  std::memset(info.cpu, 0, sizeof(info.cpu));
+  std::memset(info.memu, 0, sizeof(info.memu));
+  std::memset(info.time, 0, sizeof(info.time));
+#ifdef BUILD_IOSTATS
+  std::memset(info.io, 0, sizeof(info.io));
+#endif
+
   struct process *next = nullptr, *pr = first_process;
 
   while (pr != nullptr) {
@@ -117,20 +128,21 @@ void free_all_processes() {
   unhash_all_processes();
 }
 
-struct process *get_process_by_name(const char *name) {
+struct process *get_process_by_name(std::string_view name) {
   struct process *p = first_process;
 
   while (p != nullptr) {
-    /* Try matching against the full command line first. If that fails,
-     * fall back to the basename.
-     */
-    if (((p->name != nullptr) && (strcmp(p->name, name) == 0)) ||
-        ((p->basename != nullptr) && (strcmp(p->basename, name) == 0))) {
-      return p;
-    }
+    // Try matching against the full command line first.
+    if (p->name != nullptr && name == p->name) { return p; }
+    // If matching against full command line fails, fall back to the basename.
+    if (p->basename != nullptr && name == p->basename) { return p; }
     p = p->next;
   }
+
   return nullptr;
+}
+bool is_process_running(std::string_view name) {
+  return get_process_by_name(name) != nullptr;
 }
 
 static struct process *find_process(pid_t pid) {
