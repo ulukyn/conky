@@ -210,7 +210,13 @@ if(OS_HAIKU)
 endif(OS_HAIKU)
 
 if(OS_DARWIN)
-  set(darwin_sources data/os/darwin.mm data/os/darwin.h data/os/darwin_sip.h i18n.h)
+  set(darwin_sources
+    data/os/darwin.mm
+    data/os/darwin.h
+    data/os/darwin_sip.h
+    data/os/darwin_top_helpers.cc
+    data/os/darwin_top_helpers.h
+    i18n.h)
   set(optional_sources ${optional_sources} ${darwin_sources})
 endif(OS_DARWIN)
 
@@ -336,6 +342,7 @@ if(BUILD_WAYLAND)
         NO_CACHE
         REQUIRED
         NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
       )
       message(STATUS "PROTOCOL '${name}' ${VERSION} file: ${PROTOCOL_FILE}")
       unset(VERSION)
@@ -348,6 +355,7 @@ if(BUILD_WAYLAND)
         NO_CACHE
         REQUIRED
         NO_DEFAULT_PATH
+        NO_CMAKE_FIND_ROOT_PATH
       )
       message(STATUS "PROTOCOL '${name}' file: ${PROTOCOL_FILE}")
     endif()
